@@ -1,6 +1,7 @@
 import { MotionValue, clamp, useMotionValue } from "framer-motion";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useFollowMotionValue } from "./useFollowMotionValue";
+import { useWindowDimension } from "./useWindowDimension";
 
 type Scrub = [
   MutableRefObject<HTMLDivElement>,
@@ -9,7 +10,7 @@ type Scrub = [
   boolean
 ];
 
-export function useScrub(): Scrub {
+export function useScrub({ maxDistance = Infinity }): Scrub {
   const containerRef = useRef() as MutableRefObject<HTMLDivElement>;
 
   const target = useMotionValue(0);
@@ -23,6 +24,12 @@ export function useScrub(): Scrub {
       setIsScrubbing(false);
     }
   }, [isMoving, isUsingDrag]);
+
+  const windowDim = useWindowDimension();
+
+  const getClampedNewValue = (deltaY: number) => {
+    return clamp(-maxDistance, 0, target.get() + deltaY);
+  };
 
   useEffect(() => {
     const elm = containerRef.current;
@@ -41,7 +48,7 @@ export function useScrub(): Scrub {
       const currY = e.clientY;
       const deltaY = currY - prevY;
 
-      const updatedTarget = clamp(-Infinity, 0, target.get() + deltaY);
+      const updatedTarget = getClampedNewValue(deltaY);
       target.set(updatedTarget);
 
       prevY = currY;
@@ -66,14 +73,14 @@ export function useScrub(): Scrub {
       window.removeEventListener("pointercancel", handlePointerCancel);
       window.removeEventListener("pointermove", handlePointerMove);
     };
-  }, [containerRef]);
+  }, [containerRef, maxDistance, windowDim.height]);
 
   useEffect(() => {
     const elm = containerRef.current;
     const handleContainerWheel = (e: WheelEvent) => {
       // delta y
-      const scrollDelta = e.deltaY * 1;
-      target.set(target.get() - scrollDelta);
+      const scrollDelta = -clamp(-100, 100, e.deltaY * 1);
+      target.set(getClampedNewValue(scrollDelta));
       setIsScrubbing(true);
     };
 
@@ -81,7 +88,7 @@ export function useScrub(): Scrub {
     return () => {
       elm.removeEventListener("wheel", handleContainerWheel);
     };
-  }, []);
+  }, [maxDistance, windowDim.height]);
 
   return [containerRef, current, target, isScrubbing];
 }

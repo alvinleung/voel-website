@@ -11,7 +11,8 @@ function convertSecondsToTimeString(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
 
-  return `${Math.floor(hours)}:${Math.floor(minutes)}:${Math.floor(seconds)}`;
+  // return `${Math.floor(hours)}:${Math.floor(minutes)}:${Math.floor(seconds)}`;
+  return `${Math.floor(minutes)}:${Math.floor(seconds)}`;
 }
 
 const Timestamp = ({ currentTime }: Props) => {

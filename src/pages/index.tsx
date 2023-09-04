@@ -78,10 +78,11 @@ export default function Home() {
             onScrubBegin={() => setIsScrubbing(true)}
             onScrubEnd={() => setIsScrubbing(false)}
             currentTime={currentTime}
+            maxTime={mainVideo.duration}
           />
         </div>
         <div className="absolute right-10 bottom-10 z-10">
-          {!isVideoReady && "loading... "}
+          {!isVideoReady && "buffering... "}
           <Timestamp currentTime={currentTime} />
         </div>
         <div className="block h-screen w-screen relative">

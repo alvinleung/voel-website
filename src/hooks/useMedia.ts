@@ -1,9 +1,34 @@
-import { MutableRefObject, useEffect, useRef } from "react";
+import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useAnimationFrame } from "./useAnimationFrame";
+import { useEventListener } from "usehooks-ts";
 
 export function useMedia<T extends HTMLAudioElement | HTMLVideoElement>() {
   const ref = useRef() as MutableRefObject<T>;
+  const [duration, setDuration] = useState(0);
 
+  // useEventListener(
+  //   "loadedmetadata",
+  //   () => {
+  //     console.log("loaded");
+  //     setDuration(ref.current.duration);
+  //   },
+  //   ref
+  // );
+
+  useEffect(() => {
+    if (ref.current.duration !== 0) {
+      setDuration(ref.current.duration);
+      return;
+    }
+    const handleMetadataLoaded = () => {
+      setDuration(ref.current.duration);
+    };
+    ref.current.addEventListener("loadedmetadata", handleMetadataLoaded);
+
+    return () => {
+      ref.current.removeEventListener("loadedmetadata", handleMetadataLoaded);
+    };
+  }, []);
   const play = () => {
     let startPlayPromise = ref.current.play();
 
@@ -50,6 +75,10 @@ export function useMedia<T extends HTMLAudioElement | HTMLVideoElement>() {
 
   useAnimationFrame(() => {
     if (!isSeeking.current) return;
+    if (isNaN(targetSecond.current)) {
+      console.log("target second NAN: " + targetSecond.current);
+      return;
+    }
     ref.current.currentTime = targetSecond.current;
     isSeeking.current = false;
   }, []);
@@ -59,5 +88,6 @@ export function useMedia<T extends HTMLAudioElement | HTMLVideoElement>() {
     play,
     pause,
     seek,
+    duration,
   };
 }

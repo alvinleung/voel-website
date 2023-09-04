@@ -17,6 +17,7 @@ type Props = {
   onScrubBegin?: () => void;
   currentTime: MotionValue<number>;
   pixelPerSecond?: number;
+  maxTime: number;
 };
 
 const MusicScrubber = ({
@@ -24,10 +25,13 @@ const MusicScrubber = ({
   onScrubEnd,
   currentTime,
   pixelPerSecond = 100,
+  maxTime,
 }: Props) => {
   const windowDim = useWindowDimension();
 
-  const [scrubContainerRef, yPos, yPosTarget, isScrubbing] = useScrub();
+  const [scrubContainerRef, yPos, yPosTarget, isScrubbing] = useScrub({
+    maxDistance: maxTime * pixelPerSecond,
+  });
   useMotionValueEvent(yPos, "change", (latest) => {
     if (!isScrubbing) return;
 
