@@ -1,6 +1,7 @@
 import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useAnimationFrame } from "./useAnimationFrame";
 import { useEventListener } from "usehooks-ts";
+import { clamp } from "framer-motion";
 
 export function useMedia<T extends HTMLAudioElement | HTMLVideoElement>() {
   const ref = useRef() as MutableRefObject<T>;
@@ -70,7 +71,7 @@ export function useMedia<T extends HTMLAudioElement | HTMLVideoElement>() {
   const targetSecond = useRef(0);
   const seek = (second: number) => {
     isSeeking.current = true;
-    targetSecond.current = second;
+    targetSecond.current = clamp(0, ref.current.duration, second);
   };
 
   useAnimationFrame(() => {

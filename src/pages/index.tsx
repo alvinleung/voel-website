@@ -73,7 +73,7 @@ export default function Home() {
       }}
     >
       <div className="relative h-screen w-screen overflow-hidden">
-        <div className="absolute left-24 flex-shrink-0 z-10">
+        <div className="absolute left-[25vw] flex-shrink-0 z-10">
           <MusicScrubber
             onScrubBegin={() => setIsScrubbing(true)}
             onScrubEnd={() => setIsScrubbing(false)}

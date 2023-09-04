@@ -1,12 +1,15 @@
 import {
   MotionValue,
+  clamp,
   useMotionValue,
   useMotionValueEvent,
 } from "framer-motion";
 import { useRef, useState } from "react";
 
 export function useFollowMotionValue(
-  target: MotionValue
+  target: MotionValue,
+  min: number,
+  max: number
 ): [MotionValue, boolean] {
   const current = useMotionValue(0);
   const animFrame = useRef<number>();
@@ -21,7 +24,18 @@ export function useFollowMotionValue(
 
     function performFrameUpdate() {
       const currentScrollY = current.get();
-      const offset = (latest - currentScrollY) * 0.15;
+      const clampedLatest = clamp(min, max, latest);
+      const overflow = clampedLatest - latest;
+      console.log(clampedLatest);
+
+      const DAMP_MARGIN = 1000;
+      const DAMP_CONST = 8;
+
+      const overflowFactor = 1 - overflow / DAMP_MARGIN;
+      const dampFactor = DAMP_CONST * overflowFactor;
+      const dampedLatest = clampedLatest - overflow / dampFactor;
+
+      const offset = (dampedLatest - currentScrollY) * 0.15;
 
       if (Math.abs(offset) > stopThreshold) {
         current.set(currentScrollY + offset);
@@ -29,7 +43,7 @@ export function useFollowMotionValue(
         return;
       }
 
-      current.set(latest);
+      current.set(dampedLatest);
       setIsMoving(false);
     }
 

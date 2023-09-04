@@ -1,4 +1,9 @@
-import { MotionValue, clamp, useMotionValue } from "framer-motion";
+import {
+  MotionValue,
+  clamp,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
 import { useFollowMotionValue } from "./useFollowMotionValue";
 import { useWindowDimension } from "./useWindowDimension";
@@ -17,7 +22,7 @@ export function useScrub({
   const containerRef = useRef() as MutableRefObject<HTMLDivElement>;
 
   const target = useMotionValue(0);
-  const [current, isMoving] = useFollowMotionValue(target);
+  const [current, isMoving] = useFollowMotionValue(target, -maxDistance, 0);
 
   const [isUsingDrag, setIsUsingDrag] = useState(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
@@ -31,6 +36,8 @@ export function useScrub({
   const windowDim = useWindowDimension();
 
   const getClampedNewValue = (deltaY: number) => {
+    return target.get() + deltaY;
+
     return clamp(-maxDistance, 0, target.get() + deltaY);
   };
 
