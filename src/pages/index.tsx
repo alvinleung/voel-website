@@ -79,6 +79,7 @@ export default function Home() {
             onScrubEnd={() => setIsScrubbing(false)}
             currentTime={currentTime}
             maxTime={mainVideo.duration}
+            canUseMouseWheel
           />
         </div>
         <div className="absolute right-10 bottom-10 z-10">

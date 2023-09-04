@@ -10,7 +10,10 @@ type Scrub = [
   boolean
 ];
 
-export function useScrub({ maxDistance = Infinity }): Scrub {
+export function useScrub({
+  maxDistance = Infinity,
+  canUseMouseWheel = false,
+}): Scrub {
   const containerRef = useRef() as MutableRefObject<HTMLDivElement>;
 
   const target = useMotionValue(0);
@@ -76,19 +79,19 @@ export function useScrub({ maxDistance = Infinity }): Scrub {
   }, [containerRef, maxDistance, windowDim.height]);
 
   useEffect(() => {
-    const elm = containerRef.current;
+    if (!canUseMouseWheel) return;
     const handleContainerWheel = (e: WheelEvent) => {
       // delta y
-      const scrollDelta = -clamp(-100, 100, e.deltaY * 1);
+      const scrollDelta = -clamp(-50, 50, e.deltaY * 1);
       target.set(getClampedNewValue(scrollDelta));
       setIsScrubbing(true);
     };
 
-    elm.addEventListener("wheel", handleContainerWheel, { passive: true });
+    window.addEventListener("wheel", handleContainerWheel, { passive: true });
     return () => {
-      elm.removeEventListener("wheel", handleContainerWheel);
+      window.removeEventListener("wheel", handleContainerWheel);
     };
-  }, [maxDistance, windowDim.height]);
+  }, [maxDistance, canUseMouseWheel, windowDim.height]);
 
   return [containerRef, current, target, isScrubbing];
 }
