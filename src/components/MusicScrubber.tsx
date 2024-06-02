@@ -40,6 +40,7 @@ const MusicScrubber = ({
     maxDistance: maxTime * pixelPerSecond,
     canUseMouseWheel: canUseMouseWheel,
     direction: ScrubDirection.y,
+    canWheelAnywhere: true,
   });
   useMotionValueEvent(yPos, "change", (latest) => {
     if (!isScrubbing) return;

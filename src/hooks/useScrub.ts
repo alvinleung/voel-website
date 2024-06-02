@@ -23,6 +23,7 @@ export function useScrub({
   dampingConst = 8,
   dampingMargin = 1000,
   inverseGesture = false,
+  canWheelAnywhere = false,
 }) {
   const containerRef = useRef() as MutableRefObject<HTMLDivElement>;
 
@@ -135,7 +136,7 @@ export function useScrub({
   useEffect(() => {
     if (!canUseMouseWheel) return;
 
-    const containerElm = containerRef.current;
+    const containerElm = wheelAnywhere ? document.body : containerRef.current;
 
     const handleContainerWheel = (e: WheelEvent) => {
       // delta value
@@ -173,6 +174,7 @@ export function useScrub({
     target,
     getClampedNewValue,
     inverseGesture,
+    wheelAnywhere,
   ]);
 
   return { containerRef, current, target, isScrubbing, hasScrubbed };
