@@ -136,7 +136,9 @@ export function useScrub({
   useEffect(() => {
     if (!canUseMouseWheel) return;
 
-    const containerElm = wheelAnywhere ? document.body : containerRef.current;
+    const containerElm = canWheelAnywhere
+      ? document.body
+      : containerRef.current;
 
     const handleContainerWheel = (e: WheelEvent) => {
       // delta value
@@ -174,7 +176,7 @@ export function useScrub({
     target,
     getClampedNewValue,
     inverseGesture,
-    wheelAnywhere,
+    canWheelAnywhere,
   ]);
 
   return { containerRef, current, target, isScrubbing, hasScrubbed };
