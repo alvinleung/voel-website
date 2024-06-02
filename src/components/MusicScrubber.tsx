@@ -9,7 +9,7 @@ import StripePattern from "./StripePattern";
 import { MotionValue, motion, useMotionValueEvent } from "framer-motion";
 import InfiniteScrollPattern from "./InfiniteScrollPattern";
 import { useWindowDimension } from "@/hooks/useWindowDimension";
-import { useScrub } from "@/hooks/useScrub";
+import { ScrubDirection, useScrub } from "@/hooks/useScrub";
 import { useAnimationFrame } from "@/hooks/useAnimationFrame";
 
 type Props = {
@@ -31,9 +31,15 @@ const MusicScrubber = ({
 }: Props) => {
   const windowDim = useWindowDimension();
 
-  const [scrubContainerRef, yPos, yPosTarget, isScrubbing] = useScrub({
+  const {
+    containerRef: scrubContainerRef,
+    current: yPos,
+    target: yPosTarget,
+    isScrubbing,
+  } = useScrub({
     maxDistance: maxTime * pixelPerSecond,
     canUseMouseWheel: canUseMouseWheel,
+    direction: ScrubDirection.y,
   });
   useMotionValueEvent(yPos, "change", (latest) => {
     if (!isScrubbing) return;

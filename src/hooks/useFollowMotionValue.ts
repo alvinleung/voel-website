@@ -6,11 +6,22 @@ import {
 } from "framer-motion";
 import { useRef, useState } from "react";
 
+interface FollowMotionValueConfig {
+  min: number;
+  max: number;
+  responsiveness: number;
+  dampingConst: number;
+  dampingMargin: number;
+}
 export function useFollowMotionValue(
   target: MotionValue,
-  min: number,
-  max: number,
-  responsiveness = 0.15
+  {
+    min = 0,
+    max = Infinity,
+    responsiveness = 0.15,
+    dampingConst = 8,
+    dampingMargin = 1000,
+  }: FollowMotionValueConfig
 ): [MotionValue, boolean] {
   const current = useMotionValue(0);
   const animFrame = useRef<number>();
@@ -30,11 +41,8 @@ export function useFollowMotionValue(
       const overflowDirection = clampedLatest > latest ? -1 : 1;
       const overflow = -Math.abs(clampedLatest - latest);
 
-      const DAMP_MARGIN = 1000;
-      const DAMP_CONST = 8;
-
-      const overflowFactor = 1 - overflow / DAMP_MARGIN;
-      const dampFactor = DAMP_CONST * overflowFactor;
+      const overflowFactor = 1 - overflow / dampingMargin;
+      const dampFactor = dampingConst * overflowFactor;
       const dampedLatest =
         clampedLatest - (overflow / dampFactor) * overflowDirection;
 
