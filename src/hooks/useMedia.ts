@@ -1,4 +1,10 @@
-import { MutableRefObject, useEffect, useRef, useState } from "react";
+import {
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useAnimationFrame } from "./useAnimationFrame";
 import { useEventListener } from "usehooks-ts";
 import { clamp } from "framer-motion";
@@ -17,20 +23,25 @@ export function useMedia<T extends HTMLAudioElement | HTMLVideoElement>() {
   // );
 
   useEffect(() => {
-    if (ref.current.duration !== 0) {
+    const video = ref.current;
+
+    if (!video) return;
+
+    if (video.duration !== 0) {
       setDuration(ref.current.duration);
       return;
     }
     const handleMetadataLoaded = () => {
       setDuration(ref.current.duration);
     };
-    ref.current.addEventListener("loadedmetadata", handleMetadataLoaded);
+    video.addEventListener("loadedmetadata", handleMetadataLoaded);
 
     return () => {
-      ref.current.removeEventListener("loadedmetadata", handleMetadataLoaded);
+      video.removeEventListener("loadedmetadata", handleMetadataLoaded);
     };
-  }, []);
-  const play = () => {
+  }, [ref]);
+
+  const play = useCallback(() => {
     let startPlayPromise = ref.current.play();
 
     if (startPlayPromise !== undefined) {
@@ -50,29 +61,35 @@ export function useMedia<T extends HTMLAudioElement | HTMLVideoElement>() {
           }
         });
     }
+  }, [ref]);
 
-    // if (promise !== undefined) {
-    //   promise
-    //     .then((_) => {
-    //       // Autoplay started!
-    //     })
-    //     .catch((error) => {
-    //       // Autoplay was prevented.
-    //       // Show a "Play" button so that user can start playback.
-    //     });
-    // }
-  };
+  // if (promise !== undefined) {
+  //   promise
+  //     .then((_) => {
+  //       // Autoplay started!
+  //     })
+  //     .catch((error) => {
+  //       // Autoplay was prevented.
+  //       // Show a "Play" button so that user can start playback.
+  //     });
+  // }
 
-  const pause = () => {
+  const pause = useCallback(() => {
     ref.current.pause();
-  };
+  }, [ref]);
 
   const isSeeking = useRef(false);
   const targetSecond = useRef(0);
-  const seek = (second: number) => {
-    isSeeking.current = true;
+  const seek = useCallback((second: number, instant?: boolean) => {
     targetSecond.current = clamp(0, ref.current.duration, second);
-  };
+
+    if (instant) {
+      ref.current.currentTime = targetSecond.current;
+      return;
+    }
+
+    isSeeking.current = true;
+  }, []);
 
   useAnimationFrame(() => {
     if (!isSeeking.current) return;
@@ -80,6 +97,7 @@ export function useMedia<T extends HTMLAudioElement | HTMLVideoElement>() {
       console.log("target second NAN: " + targetSecond.current);
       return;
     }
+    console.log(targetSecond.current);
     ref.current.currentTime = targetSecond.current;
     isSeeking.current = false;
   }, []);

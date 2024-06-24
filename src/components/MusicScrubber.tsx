@@ -43,8 +43,9 @@ const MusicScrubber = ({
     canWheelAnywhere: true,
   });
   useMotionValueEvent(yPos, "change", (latest) => {
+    // yPos changes after isScrubbing turned to true for a little
+    // because it still have a little bit momentum
     if (!isScrubbing) return;
-
     currentTime.set(-latest / pixelPerSecond);
   });
 

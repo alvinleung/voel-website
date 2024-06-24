@@ -4,7 +4,7 @@ import MusicScrubber from "@/components/MusicScrubber";
 import { MutableRefObject, useEffect, useRef, useState } from "react";
 import Timestamp from "@/components/Timestamp";
 import { useMedia } from "@/hooks/useMedia";
-import { useMotionValue, useMotionValueEvent } from "framer-motion";
+import { clamp, useMotionValue, useMotionValueEvent } from "framer-motion";
 import { useAnimationFrame } from "@/hooks/useAnimationFrame";
 import { useBoolean } from "usehooks-ts";
 
@@ -18,7 +18,9 @@ const inter = Inter({ subsets: ["latin"] });
 // ffmpeg -i pendulum-promo.mp4 -vf scale=270:270  -keyint_min 25 -g 25 -c:v libvpx -crf 30 -b:v 0 -b:a 128k -c:a libopus scrub-low.webm
 export default function Home() {
   const [isScrubbing, setIsScrubbing] = useState(false);
-  const [isVideoReady, setIsVideoReady] = useState(false);
+
+  const [isMainVideoReady, setIsMainVideoReady] = useState(false);
+  const [isScrubVideoFrameStale, setIsScrubVideoFrameStale] = useState(false);
 
   const [shouldPlay, setShouldPlay] = useState(false);
 
@@ -29,44 +31,60 @@ export default function Home() {
 
   useMotionValueEvent(currentTime, "change", (latestTime) => {
     if (isScrubbing) {
+      // when scrub begin, the currentTime will wiggle a
+      // little bit as the animation takes a little to stop
       scrubVideo.seek(latestTime);
     }
   });
 
   useAnimationFrame(() => {
     if (isScrubbing) return false;
+    // update currentTime to match the video time when the video is playing
     currentTime.set(mainVideo.ref.current.currentTime);
   }, [isScrubbing]);
 
   useEffect(() => {
-    if (isScrubbing || !shouldPlay || !isVideoReady) {
+    console.log(`shouldPlay`, shouldPlay);
+    console.log(`isScrubbing`, isScrubbing);
+    console.log(`scrub-vid`, scrubVideo.ref.current.currentTime);
+    console.log(`main-vid`, mainVideo.ref.current.currentTime);
+    console.log(`currentTime`, currentTime.get());
+
+    if (isScrubbing || !shouldPlay) {
       mainVideo.pause();
       return;
     }
 
     mainVideo.play();
-  }, [shouldPlay, isScrubbing, isVideoReady]);
+  }, [shouldPlay, isScrubbing]);
 
   useEffect(() => {
+    setIsMainVideoReady(false);
+    setIsScrubVideoFrameStale(false);
+
     if (isScrubbing) {
-      setIsVideoReady(false);
       scrubVideo.pause();
       mainVideo.pause();
       return;
     }
     mainVideo.seek(scrubVideo.ref.current.currentTime);
-    setIsVideoReady(false);
     setShouldPlay(true);
+
+    // does not depend on mainVideo and scrubVideo state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isScrubbing]);
 
   const handleMainVideoReady = () => {
-    if (mainVideo.ref.current.currentTime === 0) return;
-    setIsVideoReady(true);
+    // if (mainVideo.ref.current.currentTime === 0) return;
+    setIsMainVideoReady(true);
+  };
+  const handleScrubVideoSeeked = () => {
+    setIsScrubVideoFrameStale(true);
   };
 
   return (
     <main
-      className={`fixed  ${inter.className}`}
+      className={`fixed ${inter.className}`}
       onClick={() => {
         if (isScrubbing) return;
         setShouldPlay(!shouldPlay);
@@ -83,7 +101,7 @@ export default function Home() {
           />
         </div>
         <div className="absolute right-10 bottom-10 z-10">
-          {!isVideoReady && "buffering... "}
+          {!isMainVideoReady && "buffering... "}
           <Timestamp currentTime={currentTime} />
         </div>
         <div className="block h-screen w-screen relative">
@@ -100,9 +118,10 @@ export default function Home() {
           <video
             className="absolute left-0 top-0  h-full w-full object-cover "
             style={{
-              opacity: isScrubbing ? 1 : isVideoReady ? 0 : 1,
+              opacity: isMainVideoReady ? 0 : isScrubVideoFrameStale ? 1 : 0,
             }}
             ref={scrubVideo.ref}
+            onSeeked={handleScrubVideoSeeked}
             playsInline
           >
             <source src="./media/pendulum/scrub-low.webm" />
